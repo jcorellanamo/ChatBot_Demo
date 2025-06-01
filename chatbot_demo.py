@@ -3,11 +3,10 @@ chatbotCPP.py  –  Streamlit + LangChain
 Asistente para consultar artículos y penas del Código Procesal Penal Chileno
 ────────────────────────────────────────────────────────────────────────────
 Ejecución ⇒
-
 C:/Users/jcore/AppData/Local/Microsoft/WindowsApps/python3.11.exe -m streamlit run chatbotCPP.py
-
 """
 
+# ─── Imports ─────────────────────────────────────────────────────────────
 import os, re
 import streamlit as st
 from langchain_community.document_loaders import PyPDFLoader
@@ -25,7 +24,7 @@ from langchain.docstore.document import Document
 PDF_FILE  = "codigo_procesal_penal.pdf"
 INDEX_DIR = "codigo_procesal_penal_idx"
 
-st.set_page_config(page_title="Asistente Código Procesal Penal (Demo)", page_icon="⚖️")
+st.set_page_config(page_title="Asistente Código Procesal Penal-Demo", page_icon="⚖️")
 st.title("⚖️ Asistente Virtual del Código Procesal Penal (Demo)")
 
 # ─── A. Splitter por artículo ────────────────────────────────────────────
@@ -100,19 +99,36 @@ prompt   = ChatPromptTemplate.from_messages([("system", system_prompt),
 qa_chain = create_stuff_documents_chain(llm, prompt)
 chain    = create_retrieval_chain(retriever, qa_chain)
 
-# ─── E. Interfaz tipo chat (historial arriba, input abajo) ───────────────
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+# ─── E. Estado de sesión ────────────────────────────────────────────────
+st.session_state.setdefault("messages", [])
+st.session_state.setdefault("history", [])
 
-# Muestra historial
+# ─── F. Placeholder del historial lateral ───────────────────────────────
+history_box = st.sidebar.empty()          # un contenedor vacío en el sidebar
+
+def render_history():
+    with history_box.container():
+        st.header("🗂️ Historial de consultas")
+        if st.session_state["history"]:
+            for i, q in enumerate(reversed(st.session_state["history"]), 1):
+                st.markdown(f"**{i}.** {q}")
+        else:
+            st.caption("Aún no hay consultas registradas.")
+
+# primera pinta (por si ya hay algo)
+render_history()
+
+# ─── G. Chat principal ─────────────────────────────────────────────────
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-# Entrada anclada abajo con botón flecha / Enter
 consulta = st.chat_input("Escribe tu consulta y presiona Enter…")
 
 if consulta:
+    # Guarda en historial ANTES de redibujar
+    st.session_state["history"].append(consulta)
+
     # Muestra mensaje del usuario
     with st.chat_message("user"):
         st.markdown(consulta)
@@ -128,10 +144,12 @@ if consulta:
                 respuesta = f"Error: {e}"
         st.markdown(respuesta)
 
-        # Contexto opcional
         with st.expander("📑 Fragmentos utilizados"):
             for frag in resultado.get("context", []):
                 st.write(f"**{frag.metadata.get('source','?')}**")
                 st.code(frag.page_content[:600] + "…")
 
     st.session_state.messages.append({"role": "assistant", "content": respuesta})
+
+    # ¡Redibuja el historial YA con la nueva pregunta!
+    render_history()
