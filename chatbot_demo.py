@@ -25,8 +25,8 @@ from langchain.docstore.document import Document
 PDF_FILE  = "codigo_procesal_penal.pdf"
 INDEX_DIR = "codigo_procesal_penal_idx"
 
-st.set_page_config(page_title="Asistente Código Procesal Penal", page_icon="⚖️")
-st.title("⚖️ Asistente Virtual del Código Procesal Penal")
+st.set_page_config(page_title="Asistente Código Procesal Penal (Demo)", page_icon="⚖️")
+st.title("⚖️ Asistente Virtual del Código Procesal Penal (Demo)")
 
 # ─── A. Splitter por artículo ────────────────────────────────────────────
 class PorArticuloSplitter(TextSplitter):
