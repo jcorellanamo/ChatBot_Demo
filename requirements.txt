@@ -1,8 +1,9 @@
 streamlit>=1.33
 langchain-core
-langchain-community          # ←  imprescindible: contiene PyPDFLoader
+langchain-community
 langchain-huggingface
 langchain-google-genai
-langchain-cohere             # (solo si usas el reranker)
-cohere                        #  idem
-sentence-transformers         # embeddings e5-large
+langchain-cohere        # si usas el reranker
+cohere                  #   "
+sentence-transformers
+faiss-cpu               # ← 
